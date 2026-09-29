@@ -7,11 +7,17 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.atomic.AtomicLong;
 
 @Repository
 public class AccountRepository {
 
     private final ConcurrentMap<Long, Account> store = new ConcurrentHashMap<>();
+    private final AtomicLong id = new AtomicLong();
+
+    public Long generateId() {
+        return id.incrementAndGet();
+    }
 
     public Account save(Long id, Account account) {
         store.put(id, account);

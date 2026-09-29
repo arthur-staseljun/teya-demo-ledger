@@ -14,6 +14,10 @@ public class TransactionRepository {
 
     private final ConcurrentMap<UUID, Transaction> store = new ConcurrentHashMap<>();
 
+    public UUID generateTransactionId() {
+        return UUID.randomUUID();
+    }
+
     public Transaction save(UUID id, Transaction transaction) {
         store.put(id, transaction);
         return transaction;
