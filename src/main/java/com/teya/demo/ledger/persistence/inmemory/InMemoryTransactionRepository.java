@@ -1,6 +1,7 @@
-package com.teya.demo.ledger.persistance;
+package com.teya.demo.ledger.persistence.inmemory;
 
 import com.teya.demo.ledger.model.Transaction;
+import com.teya.demo.ledger.persistence.TransactionRepository;
 import org.springframework.stereotype.Repository;
 
 import java.time.Instant;
@@ -13,25 +14,28 @@ import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.ConcurrentMap;
 
 @Repository
-public class TransactionRepository {
+public class InMemoryTransactionRepository implements TransactionRepository {
 
     private final ConcurrentMap<Long, Deque<Transaction>> store = new ConcurrentHashMap<>();
 
+    @Override
     public Transaction save(Transaction transaction) {
-        transaction.setTransactionId(UUID.randomUUID());
-        store.compute(transaction.getAccountId(), (id, transactions) -> {
+        Transaction stored = transaction.copy();
+        stored.setTransactionId(UUID.randomUUID());
+        store.compute(stored.getAccountId(), (id, transactions) -> {
             if (transactions == null) {
                 transactions = new ConcurrentLinkedDeque<>();
             }
-            transaction.setCreatedAt(Instant.now());
-            transactions.addFirst(transaction);
+            stored.setCreatedAt(Instant.now());
+            transactions.addFirst(stored);
             return transactions;
         });
-        return transaction;
+        return stored.copy();
     }
 
+    @Override
     public List<Transaction> findAll(Long accountId) {
         Deque<Transaction> transactions = store.get(accountId);
-        return transactions == null ? Collections.emptyList() : transactions.stream().toList();
+        return transactions == null ? Collections.emptyList() : transactions.stream().map(Transaction::copy).toList();
     }
 }

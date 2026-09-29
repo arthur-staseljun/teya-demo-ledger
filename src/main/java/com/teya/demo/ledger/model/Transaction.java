@@ -29,4 +29,17 @@ public class Transaction {
         this.amount = amount;
         this.balanceAfter = balanceAfter;
     }
+
+    private Transaction(Transaction other) {
+        this.transactionId = other.transactionId;
+        this.accountId = other.accountId;
+        this.transactionType = other.transactionType;
+        this.amount = other.amount;
+        this.balanceAfter = other.balanceAfter;
+        this.createdAt = other.createdAt;
+    }
+
+    public Transaction copy() {
+        return new Transaction(this);
+    }
 }

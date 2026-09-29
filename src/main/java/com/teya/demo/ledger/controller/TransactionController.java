@@ -1,5 +1,7 @@
 package com.teya.demo.ledger.controller;
 
+import com.teya.demo.ledger.exception.classification.ErrorClassification;
+import com.teya.demo.ledger.exception.classification.LedgerServiceException;
 import com.teya.demo.ledger.model.Currency;
 import com.teya.demo.ledger.model.Transaction;
 import com.teya.demo.ledger.model.request.CreateTransactionRequest;
@@ -12,38 +14,49 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/accounts/{accountIdString}/transactions")
+@RequestMapping("/api/accounts")
 public class TransactionController {
 
     private final TransactionService transactionService;
 
-    @PostMapping
-    public Transaction transact(@PathVariable String accountIdString,
+    @PostMapping("/{accountId}/transactions")
+    public Transaction transact(@PathVariable String accountId,
                                 @RequestBody CreateTransactionRequest createTransactionRequest) {
-        Long accountId = parse(accountIdString);
+        Long id = parse(accountId);
         BigDecimal amount = parseAmount(createTransactionRequest.amount());
-        Currency currency = Currency.parse(createTransactionRequest.currency());
-        return transactionService.createTransaction(accountId, amount, currency);
+        Currency currency = parseCurrency(createTransactionRequest.currency());
+        return transactionService.createTransaction(id, amount, currency);
     }
 
-    @GetMapping
-    public List<Transaction> getTransactions(@PathVariable String accountIdString) {
-        return transactionService.getAllTransactions(parse(accountIdString));
+    @GetMapping("/{accountId}/transactions")
+    public List<Transaction> getTransactions(@PathVariable String accountId) {
+        return transactionService.getAllTransactions(parse(accountId));
     }
 
-    private Long parse(String accountIdString) {
+    private Long parse(String accountId) {
         try {
-            return Long.parseLong(accountIdString);
+            return Long.parseLong(accountId);
         } catch (NumberFormatException ex) {
-            throw new IllegalArgumentException("Invalid account id: " + accountIdString);
+            throw new LedgerServiceException(ErrorClassification.ACCOUNT_ID_PARSE_ERROR);
+        }
+    }
+
+    private Currency parseCurrency(String currencyCode) {
+        try {
+            return Currency.parse(currencyCode);
+        } catch (IllegalArgumentException ex) {
+            throw new LedgerServiceException(ErrorClassification.CURRENCY_MISMATCH);
         }
     }
 
     private BigDecimal parseAmount(String amountString) {
+        if (amountString == null || amountString.isBlank()) {
+            throw new LedgerServiceException(ErrorClassification.AMOUNT_PARSE_ERROR);
+        }
         try {
             return new BigDecimal(amountString);
-        } catch (NumberFormatException ex) {
-            throw new IllegalArgumentException("Invalid amount string: " + amountString);
+        } catch (NumberFormatException | ArithmeticException ex) {
+            throw new LedgerServiceException(ErrorClassification.AMOUNT_PARSE_ERROR);
         }
     }
 }
