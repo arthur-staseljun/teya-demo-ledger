@@ -1,28 +1,26 @@
 package com.teya.demo.ledger.model;
 
+import lombok.Getter;
+import lombok.Setter;
+
 import java.math.BigDecimal;
 import java.time.Instant;
 
+@Getter
 public class Account {
     private Long id;
-    private AccountStatus accountStatus;
     private Currency currency;
-    private BigDecimal amount;
+    @Setter
+    private BigDecimal balance;
     private Instant createdAt;
-
-    public enum AccountStatus {
-        ACTIVE, INACTIVE
-    }
-
-    public enum Currency {
-        EUR
-    }
+    @Setter
+    private Instant updatedAt;
 
     public Account(Long id) {
         this.id = id;
-        this.accountStatus = AccountStatus.ACTIVE;
         this.currency = Currency.EUR;
-        this.amount = BigDecimal.ZERO;
+        this.balance = BigDecimal.ZERO;
         this.createdAt = Instant.now();
+        this.updatedAt = Instant.now();
     }
 }
